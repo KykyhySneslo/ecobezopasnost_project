@@ -1,0 +1,14 @@
+from django.urls import path
+from . import views
+
+app_name = 'messenger'
+
+urlpatterns = [
+    path('', views.inbox, name='inbox'),
+    path('chat/<int:conversation_id>/', views.chat, name='chat'),
+    path('send/<int:conversation_id>/', views.send_message, name='send_message'),
+    path('start/<int:user_id>/', views.start_conversation, name='start_conversation'),
+    path('unread-count/', views.get_unread_count, name='unread_count'),
+    path('mark-read/<int:conversation_id>/', views.mark_all_as_read, name='mark_all_as_read'),
+    path('delete/<int:conversation_id>/', views.delete_conversation, name='delete_conversation'),
+]

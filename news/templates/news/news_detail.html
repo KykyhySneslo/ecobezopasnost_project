@@ -1,0 +1,118 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ news.title }} | АНО "ЭкоБезопасность"{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Хлебные крошки -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'news:list' %}">Новости</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ news.title|truncatechars:30 }}</li>
+                </ol>
+            </nav>
+
+            <!-- Заголовок новости -->
+            <h1 class="mb-3">{{ news.title }}</h1>
+            
+            <!-- Мета-информация -->
+            <div class="d-flex justify-content-between align-items-center mb-4 text-muted">
+                <div>
+                    <i class="far fa-calendar-alt"></i> {{ news.created_at|date:"d.m.Y H:i" }}
+                    {% if news.author %}
+                    <i class="far fa-user ms-3"></i> {{ news.author.get_full_name }}
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="{% url 'news:list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Все новости
+                    </a>
+                </div>
+            </div>
+
+            <!-- Изображение новости -->
+            {% if news.image %}
+            <div class="mb-4">
+                <img src="{{ news.image.url }}" class="img-fluid rounded" alt="{{ news.title }}">
+                {% if news.image.caption %}
+                <p class="text-muted small mt-2">{{ news.image.caption }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Краткое описание -->
+            {% if news.short_description %}
+            <div class="alert alert-light mb-4">
+                <h5>Краткое описание</h5>
+                <p class="mb-0">{{ news.short_description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Полный текст -->
+            <div class="news-content mb-5">
+                {{ news.full_text|linebreaks }}
+            </div>
+
+            <!-- Прикрепленный файл -->
+            {% if news.attached_file %}
+            <div class="card mb-5">
+                <div class="card-header">
+                    <h5 class="mb-0">Прикрепленный файл</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-paperclip fa-2x text-primary me-3"></i>
+                        <div>
+                            <h6 class="mb-1">Файл: {{ news.attached_file.name|cut:"news_files/" }}</h6>
+                            <p class="text-muted small mb-0">Вы можете скачать этот файл</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ news.attached_file.url }}" class="btn btn-primary" download>
+                        <i class="fas fa-download"></i> Скачать файл
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Навигация между новостями -->
+            <div class="d-flex justify-content-between mt-5 pt-4 border-top">
+                {% if previous_news %}
+                <a href="{% url 'news:detail' previous_news.pk %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Предыдущая новость
+                </a>
+                {% else %}
+                <span></span>
+                {% endif %}
+                
+                {% if next_news %}
+                <a href="{% url 'news:detail' next_news.pk %}" class="btn btn-outline-primary">
+                    Следующая новость <i class="fas fa-arrow-right"></i>
+                </a>
+                {% else %}
+                <span></span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.news-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+.news-content p {
+    margin-bottom: 1.5rem;
+}
+.news-content img {
+    max-width: 100%;
+    height: auto;
+}
+</style>
+{% endblock %}

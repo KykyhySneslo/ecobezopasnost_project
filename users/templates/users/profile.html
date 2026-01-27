@@ -1,0 +1,188 @@
+{% extends 'core/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Профиль | АНО "ЭкоБезопасность"{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-4">
+            <!-- Боковая панель профиля -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" 
+                             alt="{{ user.get_full_name }}" 
+                             class="rounded-circle img-fluid" 
+                             style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" 
+                             style="width: 150px; height: 150px;">
+                            <i class="fas fa-user fa-4x text-secondary"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <h4 class="mb-1">{{ user.get_full_name }}</h4>
+                    <p class="text-muted mb-3">{{ user.email }}</p>
+                    
+                    <div class="d-flex justify-content-center mb-2">
+                        <a href="#profile-form" class="btn btn-primary me-2">
+                            <i class="fas fa-edit"></i> Редактировать
+                        </a>
+                        
+                        {% if user.avatar %}
+                        <form method="post" action="{% url 'users:delete_avatar' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger" 
+                                    onclick="return confirm('Удалить аватар?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        Зарегистрирован: {{ user.date_joined|date:"d.m.Y" }}
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Меню профиля -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Меню</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#profile-form" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i> Основная информация
+                    </a>
+                    <a href="#password-form" class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i> Смена пароля
+                    </a>
+                    <a href="{% url 'messenger:inbox' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-comments me-2"></i> Мессенджер
+                    </a>
+                    <a href="{% url 'core:home' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-home me-2"></i> На главную
+                    </a>
+                    <a href="{% url 'users:logout' %}" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i> Выйти
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <!-- Форма профиля -->
+            <div class="card mb-4" id="profile-form">
+                <div class="card-header">
+                    <h4 class="mb-0">Основная информация</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="profile_form" value="1">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ profile_form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ profile_form.last_name|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        {{ profile_form.username|as_crispy_field }}
+                        {{ profile_form.email|as_crispy_field }}
+                        {{ profile_form.phone_number|as_crispy_field }}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Аватар</label>
+                            <input type="file" name="avatar" class="form-control" 
+                                   accept="image/*" id="id_avatar">
+                            <div class="form-text">
+                                Загрузите изображение для вашего профиля (рекомендуется 150x150px)
+                            </div>
+                            
+                            {% if user.avatar %}
+                            <div class="mt-2">
+                                <small>Текущий аватар: {{ user.avatar.name|cut:"avatars/" }}</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Форма смены пароля -->
+            <div class="card" id="password-form">
+                <div class="card-header">
+                    <h4 class="mb-0">Смена пароля</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="password_form" value="1">
+                        
+                        {{ password_form.old_password|as_crispy_field }}
+                        {{ password_form.new_password1|as_crispy_field }}
+                        {{ password_form.new_password2|as_crispy_field }}
+                        
+                        <div class="alert alert-info">
+                            <small>
+                                <i class="fas fa-shield-alt"></i>
+                                Пароль должен содержать минимум 8 символов и не должен быть слишком простым.
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-key"></i> Сменить пароль
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Предпросмотр аватарки перед загрузкой
+document.getElementById('id_avatar').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.querySelector('.rounded-circle.img-fluid') || 
+                           document.querySelector('.rounded-circle.bg-light');
+            if (preview) {
+                if (preview.tagName === 'IMG') {
+                    preview.src = e.target.result;
+                } else {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'rounded-circle img-fluid';
+                    img.style.width = '150px';
+                    img.style.height = '150px';
+                    img.style.objectFit = 'cover';
+                    preview.parentNode.replaceChild(img, preview);
+                }
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "admin/login.html" %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <i class="fas fa-leaf"></i> АНО "ЭкоБезопасность" - Вход для сотрудников
+    </a>
+</h1>
+{% endblock %}
+
+{% block content_title %}
+<p class="text-center" style="margin-bottom: 20px;">
+    <i class="fas fa-lock fa-2x text-muted"></i><br>
+    <strong>Доступ только для сотрудников организации</strong><br>
+    <small class="text-muted">Для обычных пользователей используйте 
+        <a href="{% url 'users:login' %}">форму входа на сайте</a>
+    </small>
+</p>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+<div class="login-footer text-center" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+    <small class="text-muted">
+        <i class="fas fa-info-circle"></i>
+        Если вы забыли пароль, обратитесь к системному администратору
+    </small>
+</div>
+{% endblock %}

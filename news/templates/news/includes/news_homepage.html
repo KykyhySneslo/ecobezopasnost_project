@@ -1,0 +1,45 @@
+<div class="row">
+    {% for news in latest_news %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 news-card" data-news-id="{{ news.id }}">
+            {% if news.image %}
+            <img src="{{ news.image.url }}" class="card-img-top" alt="{{ news.title }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-newspaper fa-3x text-muted"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ news.title }}</h5>
+                <p class="card-text text-muted small">
+                    <i class="far fa-calendar-alt"></i> {{ news.created_at|date:"d.m.Y" }}
+                    {% if news.author %}
+                    <i class="far fa-user ms-3"></i> {{ news.author.get_full_name }}
+                    {% endif %}
+                </p>
+                <p class="card-text">{{ news.short_description|truncatechars:150 }}</p>
+                <a href="{% url 'news:detail' news.pk %}" class="btn btn-outline-primary btn-sm">
+                    Читать далее
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Новости скоро появятся. Следите за обновлениями!
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.news-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.news-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+</style>

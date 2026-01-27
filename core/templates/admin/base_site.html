@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <i class="fas fa-leaf"></i> АНО "ЭкоБезопасность" - Административная панель
+    </a>
+</h1>
+{% endblock %}
+
+{% block userlinks %}
+    {% if user.is_active and user.is_staff %}
+        {% url 'django-admindocs-docroot' as docsroot %}
+        {% if docsroot %}
+            <a href="{{ docsroot }}">Документация</a> /
+        {% endif %}
+        {% if user.has_usable_password %}
+            <a href="{% url 'admin:password_change' %}">Сменить пароль</a> /
+        {% endif %}
+        <a href="{% url 'admin:logout' %}">Выйти</a>
+    {% endif %}
+{% endblock %}
+
+{% block nav-global %}
+    <style>
+        .dashboard .module table th {
+            width: 100%;
+        }
+        .module h2, .module caption, .inline-group h2 {
+            background: #417690;
+        }
+        #header {
+            background: #2c3e50;
+        }
+        #branding h1 {
+            color: #fff;
+        }
+        .module h2 a.section:link, .module h2 a.section:visited {
+            color: #fff;
+        }
+    </style>
+{% endblock %}

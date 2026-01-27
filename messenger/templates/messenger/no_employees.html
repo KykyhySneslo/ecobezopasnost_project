@@ -1,0 +1,66 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Нет доступных сотрудников | АНО "ЭкоБезопасность"{% endblock %}
+
+{% block messages %}
+{# Пустой блок, чтобы скрыть системные сообщения Django #}
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-slash me-2"></i> Сотрудники недоступны</h4>
+                </div>
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-user-tie fa-4x text-warning"></i>
+                    </div>
+                    
+                    <h3>В данный момент нет доступных сотрудников</h3>
+                    <p class="lead mt-3">Наши специалисты временно недоступны для онлайн-консультаций.</p>
+                    
+                    <div class="alert alert-info mt-4">
+                        <h5>Что вы можете сделать:</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-phone text-success me-2"></i>
+                                Позвонить нам: <strong>+7 (999) 123-45-67</strong>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-envelope text-primary me-2"></i>
+                                Написать на email: <strong>info@ecobezopasnost.ru</strong>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-file-alt text-secondary me-2"></i>
+                                Ознакомиться с <a href="{% url 'docs:list' %}">документами</a>
+                            </li>
+                            <li>
+                                <i class="fas fa-newspaper text-info me-2"></i>
+                                Почитать <a href="{% url 'news:list' %}">новости</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-5">
+                        <a href="{% url 'core:home' %}" class="btn btn-primary me-3">
+                            <i class="fas fa-home me-2"></i> На главную
+                        </a>
+                        <a href="{% url 'news:list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-newspaper me-2"></i> Новости
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        Попробуйте зайти позже. Сотрудники обычно доступны Пн-Пт с 9:00 до 18:00
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

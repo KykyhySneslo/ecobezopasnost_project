@@ -1,0 +1,93 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Мессенджер | АНО "ЭкоБезопасность"{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-comments me-2"></i> Мессенджер</h4>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-tools fa-4x text-muted mb-4"></i>
+                    <h3>Раздел в разработке</h3>
+                    <p class="lead mt-3">
+                        Мессенджер скоро будет доступен! Здесь вы сможете общаться с сотрудниками нашей организации.
+                    </p>
+                    <p class="text-muted">
+                        Вы сможете отправлять сообщения, фото, видео и документы, а также просматривать историю переписки.
+                    </p>
+                    <div class="mt-4">
+                        <a href="{% url 'core:home' %}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i> На главную
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Ожидайте обновления в ближайшее время
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Информация о будущем функционале -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Что будет в мессенджере?</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="bg-primary rounded-circle p-3 me-3">
+                                    <i class="fas fa-comment text-white"></i>
+                                </div>
+                                <div>
+                                    <h6>Общение с сотрудниками</h6>
+                                    <p class="small text-muted mb-0">Прямая связь с нашими специалистами</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="bg-success rounded-circle p-3 me-3">
+                                    <i class="fas fa-paperclip text-white"></i>
+                                </div>
+                                <div>
+                                    <h6>Отправка файлов</h6>
+                                    <p class="small text-muted mb-0">Фото, видео, документы (PDF, Word, Excel)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="bg-info rounded-circle p-3 me-3">
+                                    <i class="fas fa-history text-white"></i>
+                                </div>
+                                <div>
+                                    <h6>История переписки</h6>
+                                    <p class="small text-muted mb-0">Все сообщения сохраняются</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="bg-warning rounded-circle p-3 me-3">
+                                    <i class="fas fa-bell text-white"></i>
+                                </div>
+                                <div>
+                                    <h6>Уведомления</h6>
+                                    <p class="small text-muted mb-0">Оповещения о новых сообщениях</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

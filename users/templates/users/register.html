@@ -1,0 +1,97 @@
+{% extends 'core/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Регистрация | АНО "ЭкоБезопасность"{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0 text-center">Регистрация нового пользователя</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.username|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.email|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.last_name|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        {{ form.phone_number|as_crispy_field }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.password1|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.password2|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3">
+                            <small>
+                                <i class="fas fa-info-circle"></i> 
+                                Пароль должен содержать минимум 8 символов, не должен быть слишком простым и состоять только из цифр.
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-user-plus"></i> Зарегистрироваться
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3 text-center">
+                            <a href="{% url 'users:login' %}" class="text-decoration-none">
+                                Уже есть аккаунт? Войдите
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Преимущества регистрации:</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>Мессенджер:</strong> Общайтесь с сотрудниками организации
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>История переписки:</strong> Все сообщения сохраняются
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>Персональный профиль:</strong> Настройте свои данные
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>Быстрая связь:</strong> Получайте ответы на вопросы
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

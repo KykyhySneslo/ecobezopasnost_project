@@ -1,0 +1,248 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Мессенджер - Входящие | АНО "ЭкоБезопасность"{% endblock %}
+
+{% block extra_css %}
+<style>
+    .conversation-card {
+        transition: all 0.3s;
+        border-left: 4px solid transparent;
+    }
+    .conversation-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .conversation-card.unread {
+        border-left-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    .unread-badge {
+        display: inline-block;
+        min-width: 20px;
+        height: 20px;
+        line-height: 20px;
+        text-align: center;
+        border-radius: 10px;
+        font-size: 12px;
+    }
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+    }
+    .last-message {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 300px;
+    }
+    .online-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .online {
+        background-color: #28a745;
+    }
+    .offline {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Список диалогов -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-comments me-2"></i> Диалоги</h5>
+                    <span class="badge bg-light text-dark" id="unread-counter"></span>
+                </div>
+                
+                <div class="card-body p-0">
+                    <!-- Поиск -->
+                    <div class="p-3 border-bottom">
+                        <input type="text" 
+                               class="form-control" 
+                               placeholder="Поиск диалогов..." 
+                               id="search-conversations">
+                    </div>
+                    
+                    <!-- Список диалогов -->
+                    <div class="list-group list-group-flush" id="conversations-list">
+                        {% for conversation in conversations %}
+                        <a href="{% url 'messenger:chat' conversation.id %}" 
+                           class="list-group-item list-group-item-action conversation-card {% if conversation.unread_count > 0 %}unread{% endif %}">
+                            <div class="d-flex align-items-center">
+                                <!-- Аватар пользователя -->
+                                <div class="position-relative me-3">
+                                    {% if conversation.user.avatar %}
+                                    <img src="{{ conversation.user.avatar.url }}" 
+                                         alt="{{ conversation.user.get_full_name }}" 
+                                         class="rounded-circle user-avatar">
+                                    {% else %}
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center user-avatar">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Статус онлайн -->
+                                    <span class="position-absolute bottom-0 end-0 online-dot 
+                                                 {% if conversation.user.is_online %}online{% else %}offline{% endif %}">
+                                    </span>
+                                </div>
+                                
+                                <!-- Информация о диалоге -->
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">{{ conversation.user.get_full_name|default:conversation.user.username }}</h6>
+                                            <small class="text-muted">
+                                                <i class="far fa-clock me-1"></i>
+                                                {{ conversation.updated_at|timesince }} назад
+                                            </small>
+                                        </div>
+                                        
+                                        {% if conversation.unread_count > 0 %}
+                                        <span class="badge bg-primary unread-badge">
+                                            {{ conversation.unread_count }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <p class="mb-0 text-muted small last-message">
+                                        {% with last_message=conversation.get_last_message %}
+                                            {% if last_message %}
+                                                {% if last_message.sender == request.user %}
+                                                    <i class="fas fa-reply me-1"></i>
+                                                {% endif %}
+                                                {{ last_message.text|truncatechars:40 }}
+                                                {% if last_message.file %}
+                                                    <i class="fas fa-paperclip ms-1"></i>
+                                                {% endif %}
+                                            {% else %}
+                                                Диалог пуст
+                                            {% endif %}
+                                        {% endwith %}
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Нет активных диалогов</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Доступные пользователи -->
+                {% if available_users %}
+                <div class="card-footer">
+                    <h6 class="mb-3">Начать новый диалог:</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for user in available_users %}
+                        <a href="{% url 'messenger:start_conversation' user.id %}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>
+                            {{ user.get_full_name|default:user.username }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Область чата -->
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-body text-center d-flex flex-column justify-content-center">
+                    <i class="fas fa-comments fa-4x text-muted mb-4"></i>
+                    <h4>Выберите диалог</h4>
+                    <p class="text-muted">Выберите диалог из списка слева, чтобы начать общение</p>
+                    <div class="mt-4">
+                        <div class="row g-3 justify-content-center">
+                            <div class="col-auto">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <i class="fas fa-user-tie fa-2x text-primary mb-2"></i>
+                                        <h6>Общение с пользователями</h6>
+                                        <p class="small text-muted mb-0">Отвечайте на вопросы и помогайте</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <i class="fas fa-file-upload fa-2x text-success mb-2"></i>
+                                        <h6>Обмен файлами</h6>
+                                        <p class="small text-muted mb-0">Отправляйте и получайте документы</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <i class="fas fa-history fa-2x text-info mb-2"></i>
+                                        <h6>История переписки</h6>
+                                        <p class="small text-muted mb-0">Все сообщения сохраняются</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Поиск диалогов
+    const searchInput = document.getElementById('search-conversations');
+    const conversations = document.querySelectorAll('.conversation-card');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        conversations.forEach(card => {
+            const userName = card.querySelector('h6').textContent.toLowerCase();
+            const lastMessage = card.querySelector('.last-message').textContent.toLowerCase();
+            
+            if (userName.includes(searchTerm) || lastMessage.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+    
+    // Обновление счетчика непрочитанных
+    function updateUnreadCount() {
+        fetch("{% url 'messenger:unread_count' %}")
+            .then(response => response.json())
+            .then(data => {
+                const counter = document.getElementById('unread-counter');
+                if (data.unread_count > 0) {
+                    counter.textContent = data.unread_count;
+                    counter.style.display = 'inline-block';
+                } else {
+                    counter.style.display = 'none';
+                }
+            });
+    }
+    
+    // Обновляем счетчик каждые 30 секунд
+    updateUnreadCount();
+    setInterval(updateUnreadCount, 30000);
+});
+</script>
+{% endblock %}
