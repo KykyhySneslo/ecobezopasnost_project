@@ -9,7 +9,7 @@ urlpatterns = [
     path('news/', include('news.urls')),
     path('docs/', include('docs.urls')),
     path('users/', include('users.urls')),
-    path('messenger/', include('messenger.urls')),  # Убедитесь, что эта строка есть
+    path('messenger/', include('messenger.urls')), 
 ]
 
 if settings.DEBUG:

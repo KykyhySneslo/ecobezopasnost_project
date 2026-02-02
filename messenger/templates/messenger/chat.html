@@ -70,18 +70,25 @@
     .online-status {
         font-size: 12px;
     }
-    .online-dot {
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .status-dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
         display: inline-block;
-        margin-right: 5px;
     }
-    .online {
+    .status-online {
         background-color: #28a745;
     }
-    .offline {
+    .status-offline {
         background-color: #dc3545;
+    }
+    .status-unknown {
+        background-color: #6c757d;
     }
     .message.sending {
         opacity: 0.7;
@@ -157,14 +164,9 @@
                                     </div>
                                     {% endif %}
                                 {% endif %}
-                                
-                                <!-- Статус онлайн -->
-                                <span class="position-absolute bottom-0 end-0 online-dot 
-                                             {% if employee_status and employee_status.is_online %}online{% else %}offline{% endif %}">
-                                </span>
                             </div>
                             
-                            <!-- Информация -->
+                            <!-- Информация о собеседнике и статус -->
                             <div>
                                 <h5 class="mb-0">
                                     {% if user.is_employee %}
@@ -175,14 +177,24 @@
                                     {% endif %}
                                 </h5>
                                 <small class="text-muted online-status">
-                                    <span class="online-dot {% if employee_status and employee_status.is_online %}online{% else %}offline{% endif %}"></span>
-                                    {% if employee_status and employee_status.is_online %}
-                                        онлайн
-                                    {% elif employee_status %}
-                                        был(а) {{ employee_status.last_seen|timesince }} назад
-                                    {% else %}
-                                        статус неизвестен
-                                    {% endif %}
+                                    <span class="status-indicator">
+                                        <span class="status-dot 
+                                            {% if employee_status and employee_status.is_online %}status-online
+                                            {% elif employee_status %}status-offline
+                                            {% else %}status-unknown{% endif %}">
+                                        </span>
+                                        {% if employee_status %}
+                                            {{ employee_status.status_display }}
+                                        {% else %}
+                                            {% if user.is_employee %}
+                                                <!-- Для сотрудника: пользователь не имеет EmployeeStatus -->
+                                                статус не отслеживается
+                                            {% else %}
+                                                <!-- Для пользователя: сотрудник не найден в EmployeeStatus -->
+                                                статус недоступен
+                                            {% endif %}
+                                        {% endif %}
+                                    </span>
                                 </small>
                             </div>
                         </div>
@@ -235,7 +247,7 @@
                             {% endif %}
                         </div>
                         <div class="message-time">
-                            {{ message.timestamp|date:"H:i" }}
+                            {{ message.timestamp|date:"d.m.Y H:i" }}
                             {% if message.sender == user and message.is_read %}
                                 <i class="fas fa-check-double text-success ms-1"></i>
                             {% elif message.sender == user %}
@@ -327,6 +339,7 @@ const currentUserId = {{ user.id }};
 let socket = null;
 let typingTimeout = null;
 let fileSendingInProgress = false;
+let pingInterval = null;
 
 // Подключение к WebSocket
 function connectWebSocket() {
@@ -337,6 +350,12 @@ function connectWebSocket() {
     
     socket.onopen = function(e) {
         console.log('WebSocket connected');
+        // Запускаем пинг каждые 30 секунд для поддержания соединения
+        pingInterval = setInterval(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({type: 'ping'}));
+            }
+        }, 30000);
     };
     
     socket.onmessage = function(e) {
@@ -346,11 +365,17 @@ function connectWebSocket() {
     
     socket.onclose = function(e) {
         console.log('WebSocket disconnected, reconnecting...');
+        if (pingInterval) {
+            clearInterval(pingInterval);
+        }
         setTimeout(connectWebSocket, 3000);
     };
     
     socket.onerror = function(e) {
         console.error('WebSocket error:', e);
+        if (pingInterval) {
+            clearInterval(pingInterval);
+        }
     };
 }
 
@@ -394,6 +419,20 @@ function addMessageToChat(message, senderId) {
         `;
     }
     
+    // Форматируем дату и время сообщения
+    const messageDate = new Date(message.timestamp);
+    const now = new Date();
+    let timeDisplay;
+    
+    // Если сообщение сегодня - показываем только время
+    if (messageDate.toDateString() === now.toDateString()) {
+        timeDisplay = messageDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    } else {
+        // Если вчера или раньше - показываем дату и время
+        timeDisplay = messageDate.toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit', year: 'numeric'}) + ' ' + 
+                     messageDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+    
     const messageHtml = `
         <div class="message ${isOutgoing ? 'message-outgoing' : 'message-incoming'}" 
              id="${messageId}" 
@@ -404,7 +443,7 @@ function addMessageToChat(message, senderId) {
                 ${fileHtml}
             </div>
             <div class="message-time">
-                ${new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                ${timeDisplay}
                 ${isOutgoing && message.is_read ? 
                     '<i class="fas fa-check-double text-success ms-1"></i>' : 
                     isOutgoing ? '<i class="fas fa-check text-muted ms-1"></i>' : ''}
@@ -671,6 +710,73 @@ document.getElementById('message-input').addEventListener('input', function() {
     this.style.height = (this.scrollHeight) + 'px';
 });
 
+// Обновление статуса онлайн каждую минуту
+function updateOnlineStatus() {
+    fetch(`/messenger/update_status/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        }
+    }).catch(() => {
+        // Игнорируем ошибки
+    });
+}
+
+// ========== ПРОСТОЙ И ЭФФЕКТИВНЫЙ БЛОКИРОВЩИК УВЕДОМЛЕНИЙ ==========
+function setupNotificationBlocker() {
+    console.log("Активация блокировщика уведомлений...");
+    
+    // 1. Отключаем браузерные уведомления
+    if (window.Notification) {
+        Notification.requestPermission = function() {
+            return Promise.resolve("denied");
+        };
+        Notification.permission = "denied";
+    }
+    
+    // 2. Отключаем звуковые уведомления
+    const originalPlay = HTMLAudioElement.prototype.play;
+    HTMLAudioElement.prototype.play = function() {
+        console.log("Звуковое оповещение заблокировано");
+        return Promise.reject();
+    };
+    
+    // 3. Функция для скрытия уведомлений
+    function hideNotifications() {
+        // Только определенные типы элементов, которые используются для уведомлений
+        const notificationSelectors = [
+            '.notification',
+            '.toast',
+            '.toast-container',
+            '.alert-dismissible',
+            '[class*="notification"]',
+            '[class*="toast"]'
+        ];
+        
+        notificationSelectors.forEach(selector => {
+            try {
+                document.querySelectorAll(selector).forEach(element => {
+                    // Пропускаем элементы внутри чата
+                    if (element.closest('.chat-container') || 
+                        element.closest('#messages-container')) {
+                        return;
+                    }
+                    element.style.display = 'none';
+                });
+            } catch(e) {
+                // Игнорируем ошибки
+            }
+        });
+    }
+    
+    // 4. Запускаем очистку
+    setTimeout(hideNotifications, 100);
+    setTimeout(hideNotifications, 500);
+    setInterval(hideNotifications, 2000);
+    
+    console.log("Блокировщик уведомлений активирован");
+}
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', function() {
     connectWebSocket();
@@ -678,6 +784,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Фокус на поле ввода
     document.getElementById('message-input').focus();
+    
+    // Обновляем статус каждую минуту
+    setInterval(updateOnlineStatus, 60000);
+    
+    // Первое обновление статуса
+    setTimeout(updateOnlineStatus, 5000);
+    
+    // Запускаем блокировку уведомлений
+    setTimeout(setupNotificationBlocker, 1000);
 });
 </script>
 {% endblock %}

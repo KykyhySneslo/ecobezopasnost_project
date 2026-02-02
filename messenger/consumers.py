@@ -10,9 +10,9 @@ User = get_user_model()
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         """Обработка подключения к WebSocket"""
-        self.user = self.scope["user"]
+        self.user = self.scope.get("user")
         
-        if not self.user.is_authenticated:
+        if not self.user or not self.user.is_authenticated:
             await self.close()
             return
         
@@ -94,9 +94,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }
             )
         
-        elif message_type == 'read':
-            # Отмечаем сообщения как прочитанные
-            await self.mark_as_read(data.get('message_ids', []))
+        elif message_type == 'ping':
+            # Обновляем время последней активности для сотрудников
+            if self.user.is_employee:
+                await self.update_last_seen(self.user.id)
 
     async def chat_message(self, event):
         """Отправка сообщения клиенту"""
@@ -138,12 +139,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             text=text,
         )
         
-        # Обработка файла (в реальном проекте нужна обработка base64/бинарных данных)
-        if file_data:
-            # Здесь будет логика сохранения файла
-            pass
-        
-        # Обновляем время последнего обновления диалога
+        # Обновляем время диалога
+        conversation.updated_at = timezone.now()
         conversation.save()
         
         return message
@@ -156,9 +153,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 employee_id=employee_id
             )
             status.is_online = is_online
+            status.last_seen = timezone.now()
             status.save()
         except Exception as e:
             print(f"Error updating employee status: {e}")
+
+    @database_sync_to_async
+    def update_last_seen(self, employee_id):
+        """Обновляет время последней активности сотрудника"""
+        try:
+            status = EmployeeStatus.objects.get(employee_id=employee_id)
+            status.last_seen = timezone.now()
+            status.save()
+        except EmployeeStatus.DoesNotExist:
+            pass
+        except Exception as e:
+            print(f"Error updating last seen: {e}")
 
     @database_sync_to_async
     def mark_as_read(self, message_ids):

@@ -11,32 +11,39 @@
                     <h4 class="mb-0"><i class="fas fa-comments me-2"></i> Мессенджер</h4>
                 </div>
                 <div class="card-body text-center py-5">
-                    <i class="fas fa-tools fa-4x text-muted mb-4"></i>
-                    <h3>Раздел в разработке</h3>
+                    <i class="fas fa-comments fa-4x text-primary mb-4"></i>
+                    <h3>Добро пожаловать в мессенджер!</h3>
                     <p class="lead mt-3">
-                        Мессенджер скоро будет доступен! Здесь вы сможете общаться с сотрудниками нашей организации.
+                        Здесь вы можете общаться с сотрудниками нашей организации.
                     </p>
-                    <p class="text-muted">
-                        Вы сможете отправлять сообщения, фото, видео и документы, а также просматривать историю переписки.
-                    </p>
+                    
                     <div class="mt-4">
-                        <a href="{% url 'core:home' %}" class="btn btn-primary">
-                            <i class="fas fa-home me-2"></i> На главную
-                        </a>
+                        {% if user.is_employee %}
+                            <a href="{% url 'messenger:employee_inbox' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-inbox me-2"></i> Перейти к входящим
+                            </a>
+                        {% else %}
+                            <p class="text-muted mb-3">
+                                Нажмите кнопку ниже, чтобы начать общение с доступным сотрудником.
+                            </p>
+                            <a href="{% url 'messenger:inbox' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-comment me-2"></i> Начать общение
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-footer text-center">
                     <small class="text-muted">
                         <i class="fas fa-info-circle me-1"></i>
-                        Ожидайте обновления в ближайшее время
+                        Все сообщения сохраняются в истории переписки
                     </small>
                 </div>
             </div>
             
-            <!-- Информация о будущем функционале -->
+            <!-- Инструкция -->
             <div class="card mt-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Что будет в мессенджере?</h5>
+                    <h5 class="mb-0">Как пользоваться мессенджером?</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -46,8 +53,8 @@
                                     <i class="fas fa-comment text-white"></i>
                                 </div>
                                 <div>
-                                    <h6>Общение с сотрудниками</h6>
-                                    <p class="small text-muted mb-0">Прямая связь с нашими специалистами</p>
+                                    <h6>Отправка сообщений</h6>
+                                    <p class="small text-muted mb-0">Напишите сообщение и нажмите кнопку отправки</p>
                                 </div>
                             </div>
                         </div>
@@ -65,22 +72,22 @@
                         <div class="col-md-6 mb-3">
                             <div class="d-flex align-items-start">
                                 <div class="bg-info rounded-circle p-3 me-3">
-                                    <i class="fas fa-history text-white"></i>
+                                    <i class="fas fa-user-tie text-white"></i>
                                 </div>
                                 <div>
-                                    <h6>История переписки</h6>
-                                    <p class="small text-muted mb-0">Все сообщения сохраняются</p>
+                                    <h6>Общение с сотрудниками</h6>
+                                    <p class="small text-muted mb-0">Прямая связь с нашими специалистами</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <div class="d-flex align-items-start">
                                 <div class="bg-warning rounded-circle p-3 me-3">
-                                    <i class="fas fa-bell text-white"></i>
+                                    <i class="fas fa-history text-white"></i>
                                 </div>
                                 <div>
-                                    <h6>Уведомления</h6>
-                                    <p class="small text-muted mb-0">Оповещения о новых сообщениях</p>
+                                    <h6>История переписки</h6>
+                                    <p class="small text-muted mb-0">Все сообщения сохраняются</p>
                                 </div>
                             </div>
                         </div>
