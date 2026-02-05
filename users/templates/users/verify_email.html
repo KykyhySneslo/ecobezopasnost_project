@@ -1,0 +1,131 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Подтверждение Email | АНО "ЭкоБезопасность"{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-mail-bulk me-2"></i> Подтверждение Email</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
+                        <h4>Проверьте вашу почту</h4>
+                        <p class="text-muted">
+                            Мы отправили 6-значный код подтверждения на email:<br>
+                            <strong>{{ email }}</strong>
+                        </p>
+                    </div>
+                    
+                    {% if messages %}
+                    <div class="alert alert-info">
+                        {% for message in messages %}
+                        {{ message }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" id="verification-form">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">
+                                <i class="fas fa-key me-1"></i> Код подтверждения
+                            </label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                            <div class="text-danger small">{{ form.code.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-success" id="submit-btn">
+                                <i class="fas fa-check me-2"></i> Подтвердить
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p class="text-muted mb-2">Не получили код?</p>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="resend-btn">
+                            <i class="fas fa-redo me-1"></i> Отправить код повторно
+                        </button>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i> Важно!</h6>
+                        <ul class="mb-0 small">
+                            <li>Код действителен в течение 15 минут</li>
+                            <li>Новый код можно запросить через 2 минуты</li>
+                            <li>Проверьте папку "Спам", если не видите письмо</li>
+                            <li>Код состоит только из цифр (6 символов)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const resendBtn = document.getElementById('resend-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const codeInput = document.getElementById('{{ form.code.id_for_label }}');
+    
+    // Автофокус на поле ввода кода
+    codeInput.focus();
+    
+    // Автоматическая отправка формы при вводе 6 цифр
+    codeInput.addEventListener('input', function() {
+        if (this.value.length === 6) {
+            document.getElementById('verification-form').submit();
+        }
+    });
+    
+    // Повторная отправка кода
+    resendBtn.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Отправка...';
+        
+        fetch("{% url 'users:resend_verification_code' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Новый код отправлен на ваш email');
+                codeInput.value = '';
+                codeInput.focus();
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = '<i class="fas fa-redo me-1"></i> Отправить код повторно';
+        })
+        .catch(error => {
+            alert('Ошибка сети');
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = '<i class="fas fa-redo me-1"></i> Отправить код повторно';
+        });
+    });
+    
+    // Таймер для повторной отправки
+    function updateResendTimer() {
+        // Здесь можно добавить логику таймера
+        // Например, отключать кнопку на 2 минуты после отправки
+    }
+    
+    updateResendTimer();
+});
+</script>
+{% endblock %}

@@ -3,6 +3,10 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm, Authenti
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from django.utils import timezone
+from datetime import timedelta
+from .models import User, EmailVerification
+import random
 
 User = get_user_model()
 
@@ -188,3 +192,36 @@ class PasswordChangeCustomForm(forms.Form):
             raise ValidationError("Пароль должен содержать минимум 8 символов")
         
         return cleaned_data
+class RegistrationForm(UserCreationForm):
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Введите ваш email'})
+    )
+    
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password1', 'password2')
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email, email_verified=True).exists():
+            raise ValidationError('Этот email уже зарегистрирован и подтвержден.')
+        return email
+
+class VerificationForm(forms.Form):
+    code = forms.CharField(
+        max_length=6,
+        min_length=6,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Введите 6-значный код',
+            'autocomplete': 'off'
+        }),
+        help_text="Введите код, отправленный на ваш email"
+    )
+    
+    def clean_code(self):
+        code = self.cleaned_data.get('code')
+        if not code.isdigit() or len(code) != 6:
+            raise ValidationError('Код должен состоять из 6 цифр')
+        return code

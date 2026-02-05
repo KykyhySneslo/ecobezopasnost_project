@@ -46,6 +46,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'messenger.middleware.OnlineStatusMiddleware',
+    'users.middleware.EmailVerificationMiddleware',
 ]
 
 ROOT_URLCONF = 'ecobezopasnost.urls'
@@ -161,3 +162,13 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  
+
+EMAIL_HOST = 'smtp.yandex.ru'  
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'georgy.lukashvili@yandex.ru'
+EMAIL_HOST_PASSWORD = '25062003aa'
+DEFAULT_FROM_EMAIL = 'georgy.lukashvili@yandex.ru'
+SERVER_EMAIL = 'georgy.lukashvili@yandex.ru'
