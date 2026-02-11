@@ -5,135 +5,24 @@ from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from .forms import (CustomUserCreationForm, CustomAuthenticationForm, 
                    CustomUserChangeForm, PasswordChangeCustomForm)
-from django.utils import timezone
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from .forms import RegistrationForm, VerificationForm
-from .models import EmailVerification, CustomUser
-from .utils import generate_verification_code, send_verification_email
+from .models import CustomUser
 
-def register(request):
+def register_view(request):
     """Регистрация нового пользователя"""
+    if request.user.is_authenticated:
+        return redirect('core:home')
+    
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
+        form = CustomUserCreationForm(request.POST, request.FILES)
         if form.is_valid():
-            # Создаем пользователя, но не логиним его
-            user = form.save(commit=False)
-            user.is_active = True  # Пользователь активен, но email не подтвержден
-            user.email_verified = False
-            user.save()
-            
-            # Генерируем и отправляем код подтверждения
-            code = generate_verification_code()
-            EmailVerification.objects.create(user=user, code=code)
-            
-            # Отправляем email
-            if send_verification_email(user, code):
-                messages.success(request, f'Код подтверждения отправлен на email {user.email}')
-            else:
-                messages.warning(request, 'Ошибка отправки email. Попробуйте позже.')
-            
-            # Сохраняем ID пользователя в сессии для подтверждения
-            request.session['verification_user_id'] = user.id
-            return redirect('users:verify_email')
+            user = form.save()
+            login(request, user)
+            messages.success(request, f'Добро пожаловать, {user.first_name}! Регистрация прошла успешно.')
+            return redirect('core:home')
     else:
-        form = RegistrationForm()
+        form = CustomUserCreationForm()
     
     return render(request, 'users/register.html', {'form': form})
-
-def verify_email(request):
-    """Подтверждение email с помощью кода"""
-    user_id = request.session.get('verification_user_id')
-    
-    if not user_id:
-        messages.error(request, 'Сессия истекла. Пожалуйста, пройдите регистрацию заново.')
-        return redirect('users:register')
-    
-    user = get_object_or_404(CustomUser, id=user_id)
-    
-    if request.method == 'POST':
-        form = VerificationForm(request.POST)
-        if form.is_valid():
-            code = form.cleaned_data['code']
-            
-            # Ищем актуальный код
-            verification = EmailVerification.objects.filter(
-                user=user,
-                code=code,
-                is_verified=False
-            ).order_by('-created_at').first()
-            
-            if verification:
-                if verification.is_expired():
-                    messages.error(request, 'Код подтверждения истек. Запросите новый.')
-                else:
-                    # Подтверждаем email
-                    verification.is_verified = True
-                    verification.save()
-                    
-                    user.email_verified = True
-                    user.save()
-                    
-                    # Автоматически логиним пользователя
-                    login(request, user)
-                    
-                    # Очищаем сессию
-                    if 'verification_user_id' in request.session:
-                        del request.session['verification_user_id']
-                    
-                    messages.success(request, 'Email успешно подтвержден! Добро пожаловать!')
-                    return redirect('core:home')
-            else:
-                messages.error(request, 'Неверный код подтверждения.')
-    else:
-        form = VerificationForm()
-    
-    # Проверяем, есть ли активные коды
-    active_verifications = EmailVerification.objects.filter(
-        user=user,
-        is_verified=False,
-        created_at__gte=timezone.now() - timezone.timedelta(minutes=15)
-    ).exists()
-    
-    if not active_verifications:
-        messages.warning(request, 'У вас нет активных кодов. Запросите новый код.')
-    
-    context = {
-        'form': form,
-        'user': user,
-        'email': user.email[:3] + '***' + user.email[user.email.find('@'):]
-    }
-    
-    return render(request, 'users/verify_email.html', context)
-
-@require_POST
-def resend_verification_code(request):
-    """Повторная отправка кода подтверждения"""
-    user_id = request.session.get('verification_user_id')
-    
-    if not user_id:
-        return JsonResponse({'success': False, 'error': 'Сессия истекла'})
-    
-    user = get_object_or_404(CustomUser, id=user_id)
-    
-    # Проверяем, можно ли запросить новый код
-    if not user.can_request_verification():
-        return JsonResponse({
-            'success': False, 
-            'error': 'Вы можете запросить новый код только через 2 минуты после предыдущей отправки'
-        })
-    
-    # Генерируем новый код
-    code = generate_verification_code()
-    EmailVerification.objects.create(user=user, code=code)
-    
-    # Отправляем email
-    if send_verification_email(user, code):
-        user.verification_code_sent_at = timezone.now()
-        user.save()
-        return JsonResponse({'success': True})
-    else:
-        return JsonResponse({'success': False, 'error': 'Ошибка отправки email'})
 
 def login_view(request):
     """Вход пользователя"""

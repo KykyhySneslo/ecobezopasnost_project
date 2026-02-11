@@ -3,10 +3,6 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm, Authenti
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-from django.utils import timezone
-from datetime import timedelta
-from .models import User, EmailVerification
-import random
 
 User = get_user_model()
 
@@ -57,80 +53,6 @@ class CustomUserChangeForm(UserChangeForm):
             if qs.exists():
                 raise ValidationError("Пользователь с таким email уже существует")
         return email
-
-class CustomUserCreationForm(UserCreationForm):
-    """Форма для регистрации нового пользователя"""
-    email = forms.EmailField(
-        required=True,
-        widget=forms.EmailInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Введите email'
-        })
-    )
-    first_name = forms.CharField(
-        required=True,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Введите имя'
-        })
-    )
-    last_name = forms.CharField(
-        required=True,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Введите фамилию'
-        })
-    )
-    phone_number = forms.CharField(
-        required=False,
-        max_length=20,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': '+7 (999) 123-45-67'
-        }),
-        validators=[RegexValidator(
-            regex=r'^\+?1?\d{9,15}$',
-            message="Номер телефона должен быть в формате: '+79991234567'"
-        )]
-    )
-    
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 
-                  'phone_number', 'password1', 'password2')
-        widgets = {
-            'username': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Введите логин'
-            }),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            if field.widget.__class__ == forms.PasswordInput:
-                field.widget.attrs.update({'class': 'form-control'})
-    
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email).exists():
-            raise ValidationError("Пользователь с таким email уже существует")
-        return email
-
-class CustomUserChangeForm(UserChangeForm):
-    """Форма для изменения данных пользователя"""
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 
-                  'phone_number', 'avatar')
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs.update({'class': 'form-control'})
-        
-        # Убираем поле пароля из формы редактирования
-        self.fields.pop('password')
 
 class CustomAuthenticationForm(AuthenticationForm):
     """Кастомизированная форма входа"""
@@ -192,36 +114,3 @@ class PasswordChangeCustomForm(forms.Form):
             raise ValidationError("Пароль должен содержать минимум 8 символов")
         
         return cleaned_data
-class RegistrationForm(UserCreationForm):
-    email = forms.EmailField(
-        required=True,
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Введите ваш email'})
-    )
-    
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'password1', 'password2')
-    
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email, email_verified=True).exists():
-            raise ValidationError('Этот email уже зарегистрирован и подтвержден.')
-        return email
-
-class VerificationForm(forms.Form):
-    code = forms.CharField(
-        max_length=6,
-        min_length=6,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Введите 6-значный код',
-            'autocomplete': 'off'
-        }),
-        help_text="Введите код, отправленный на ваш email"
-    )
-    
-    def clean_code(self):
-        code = self.cleaned_data.get('code')
-        if not code.isdigit() or len(code) != 6:
-            raise ValidationError('Код должен состоять из 6 цифр')
-        return code

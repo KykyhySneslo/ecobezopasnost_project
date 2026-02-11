@@ -46,7 +46,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'messenger.middleware.OnlineStatusMiddleware',
-    'users.middleware.EmailVerificationMiddleware',
+    #'users.middleware.EmailVerificationMiddleware',
 ]
 
 ROOT_URLCONF = 'ecobezopasnost.urls'
@@ -89,6 +89,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -125,14 +128,14 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Аутентификация
-LOGIN_URL = '/admin/login/'  
-LOGIN_REDIRECT_URL = '/admin/'  
-LOGOUT_REDIRECT_URL = '/admin/login/'  
+LOGIN_URL = '/admin/login/'  # Для админки используем стандартный вход
+LOGIN_REDIRECT_URL = '/admin/'  # После входа в админку - на главную админки
+LOGOUT_REDIRECT_URL = '/admin/login/'  # После выхода - на страницу входа в админку
 
 # Для обычных пользователей
-USER_LOGIN_URL = '/users/login/'  
-USER_LOGIN_REDIRECT_URL = '/'  
-USER_LOGOUT_REDIRECT_URL = '/'  
+USER_LOGIN_URL = '/users/login/'  # Будем создавать
+USER_LOGIN_REDIRECT_URL = '/'  # После входа на главную
+USER_LOGOUT_REDIRECT_URL = '/'  # После выхода на главную
 
 # Email settings (для сброса пароля)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -154,6 +157,8 @@ AUTHENTICATION_BACKENDS = [
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_NAME = 'sessionid'
 SESSION_COOKIE_AGE = 1209600  # 2 недели
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_SECURE = False  # True для HTTPS
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
@@ -163,12 +168,13 @@ CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  
 
-EMAIL_HOST = 'smtp.yandex.ru'  
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'georgy.lukashvili@yandex.ru'
-EMAIL_HOST_PASSWORD = '25062003aa'
-DEFAULT_FROM_EMAIL = 'georgy.lukashvili@yandex.ru'
-SERVER_EMAIL = 'georgy.lukashvili@yandex.ru'
+# EMAIL_HOST = 'smtp.yandex.ru'  
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'georgy.lukashvili@yandex.ru'
+# EMAIL_HOST_PASSWORD = '25062003aa'
+# DEFAULT_FROM_EMAIL = 'georgy.lukashvili@yandex.ru'
+# SERVER_EMAIL = 'georgy.lukashvili@yandex.ru'
+#CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
